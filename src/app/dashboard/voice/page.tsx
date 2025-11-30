@@ -37,6 +37,21 @@ const RETRY_DELAY = 1000; // 1 second
 // Helper to delay execution
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Helper to strip markdown formatting
+const stripMarkdown = (text: string): string => {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, '$1')  // **bold** -> bold
+    .replace(/\*([^*]+)\*/g, '$1')       // *italic* -> italic
+    .replace(/__([^_]+)__/g, '$1')       // __bold__ -> bold
+    .replace(/_([^_]+)_/g, '$1')         // _italic_ -> italic
+    .replace(/~~([^~]+)~~/g, '$1')       // ~~strikethrough~~ -> strikethrough
+    .replace(/`([^`]+)`/g, '$1')         // `code` -> code
+    .replace(/^#{1,6}\s+/gm, '')         // # Header -> Header
+    .replace(/^\s*[-*+]\s+/gm, '• ')     // - list -> • list
+    .replace(/^\s*\d+\.\s+/gm, '')       // 1. list -> list
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'); // [link](url) -> link
+};
+
 const scenarioPrompts = [
   {
     id: 'search',
@@ -290,7 +305,9 @@ export default function VoicePage() {
                               <span className="text-xs font-medium">오류 발생</span>
                             </div>
                           )}
-                          <p className="text-sm whitespace-pre-line">{message.content}</p>
+                          <p className="text-sm whitespace-pre-line">
+                            {message.role === 'ai' ? stripMarkdown(message.content) : message.content}
+                          </p>
                           <div className={`flex items-center justify-between mt-1 ${
                             message.role === 'user' ? 'text-white/50' : 'text-[#64748B]'
                           }`}>
