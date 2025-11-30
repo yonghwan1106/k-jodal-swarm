@@ -1,0 +1,7 @@
+# K-조달 AI 스웜 robots.txt
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://k-jodal-swarm.vercel.app/sitemap.xml

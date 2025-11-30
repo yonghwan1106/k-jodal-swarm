@@ -222,7 +222,7 @@ export default function AgentsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="p-4 bg-[#1E293B]/60 border-[#334155]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#3B82F6]/20 flex items-center justify-center">
@@ -272,9 +272,9 @@ export default function AgentsPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6">
         {/* Swarm sections */}
-        <div className="col-span-8 space-y-6">
+        <div className="xl:col-span-8 space-y-4 sm:space-y-6">
           <SwarmSection
             type="scout"
             agents={scoutAgents}
@@ -298,7 +298,7 @@ export default function AgentsPage() {
         </div>
 
         {/* Activity feed */}
-        <div className="col-span-4">
+        <div className="xl:col-span-4">
           <Card className="bg-[#1E293B]/40 border-[#334155] h-full">
             <div className="p-4 border-b border-[#334155]">
               <div className="flex items-center justify-between">
@@ -306,7 +306,7 @@ export default function AgentsPage() {
                 <Badge className="bg-[#22C55E]/20 text-[#22C55E]">Live</Badge>
               </div>
             </div>
-            <ScrollArea className="h-[calc(100vh-350px)]">
+            <ScrollArea className="h-[400px] xl:h-[calc(100vh-350px)]">
               <div className="p-3 space-y-2">
                 {activities.map((activity) => {
                   const Icon = agentIcons[activity.agentType];

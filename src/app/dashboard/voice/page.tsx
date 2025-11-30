@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,9 @@ import {
   Sparkles,
   Clock,
   Globe,
-  Loader2
+  Loader2,
+  RefreshCw,
+  AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -25,7 +27,15 @@ interface Message {
   role: 'user' | 'ai';
   content: string;
   timestamp: Date;
+  isError?: boolean;
 }
+
+// Retry configuration
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
+
+// Helper to delay execution
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const scenarioPrompts = [
   {
@@ -65,16 +75,17 @@ export default function VoicePage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [conversationHistory, setConversationHistory] = useState<{role: string; content: string}[]>([]);
 
-  const addMessage = (role: 'user' | 'ai', content: string) => {
+  const addMessage = useCallback((role: 'user' | 'ai', content: string, isError = false) => {
     setMessages(prev => [...prev, {
       id: Date.now().toString(),
       role,
       content,
-      timestamp: new Date()
+      timestamp: new Date(),
+      isError
     }]);
-  };
+  }, []);
 
-  const sendToClaudeAPI = async (userMessage: string) => {
+  const sendToClaudeAPI = useCallback(async (userMessage: string, retryCount = 0): Promise<{ message: string; isError: boolean }> => {
     // Build message history for context
     const newHistory = [
       ...conversationHistory,
@@ -92,11 +103,20 @@ export default function VoicePage() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('API request failed');
-      }
-
       const data = await response.json();
+
+      if (!response.ok) {
+        // Check if we should retry (for server errors, not client errors)
+        if (response.status >= 500 && retryCount < MAX_RETRIES) {
+          console.log(`API request failed, retrying... (${retryCount + 1}/${MAX_RETRIES})`);
+          await delay(RETRY_DELAY * (retryCount + 1)); // Exponential backoff
+          return sendToClaudeAPI(userMessage, retryCount + 1);
+        }
+
+        // Use user-friendly error message from API
+        const errorMessage = data.error || '알 수 없는 오류가 발생했습니다.';
+        return { message: errorMessage, isError: true };
+      }
 
       // Update conversation history with both user and AI messages
       setConversationHistory([
@@ -104,23 +124,41 @@ export default function VoicePage() {
         { role: 'assistant', content: data.message }
       ]);
 
-      return data.message;
+      return { message: data.message, isError: false };
     } catch (error) {
       console.error('Error calling Claude API:', error);
-      return '죄송합니다. 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+
+      // Retry on network errors
+      if (retryCount < MAX_RETRIES) {
+        console.log(`Network error, retrying... (${retryCount + 1}/${MAX_RETRIES})`);
+        await delay(RETRY_DELAY * (retryCount + 1));
+        return sendToClaudeAPI(userMessage, retryCount + 1);
+      }
+
+      return {
+        message: '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.',
+        isError: true
+      };
     }
-  };
+  }, [conversationHistory]);
+
+  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
 
   const handleScenario = async (scenario: typeof scenarioPrompts[0]) => {
     // Add user message
     addMessage('user', scenario.userMessage);
     setIsTyping(true);
+    setLastFailedMessage(null);
 
     // Get AI response from Claude API
-    const aiResponse = await sendToClaudeAPI(scenario.userMessage);
+    const { message, isError } = await sendToClaudeAPI(scenario.userMessage);
 
     setIsTyping(false);
-    addMessage('ai', aiResponse);
+    addMessage('ai', message, isError);
+
+    if (isError) {
+      setLastFailedMessage(scenario.userMessage);
+    }
   };
 
   const handleSend = async () => {
@@ -130,12 +168,34 @@ export default function VoicePage() {
     addMessage('user', userMessage);
     setInputText('');
     setIsTyping(true);
+    setLastFailedMessage(null);
 
     // Get AI response from Claude API
-    const aiResponse = await sendToClaudeAPI(userMessage);
+    const { message, isError } = await sendToClaudeAPI(userMessage);
 
     setIsTyping(false);
-    addMessage('ai', aiResponse);
+    addMessage('ai', message, isError);
+
+    if (isError) {
+      setLastFailedMessage(userMessage);
+    }
+  };
+
+  const handleRetry = async () => {
+    if (!lastFailedMessage || isTyping) return;
+
+    setIsTyping(true);
+    // Remove last error message
+    setMessages(prev => prev.slice(0, -1));
+
+    const { message, isError } = await sendToClaudeAPI(lastFailedMessage);
+
+    setIsTyping(false);
+    addMessage('ai', message, isError);
+
+    if (!isError) {
+      setLastFailedMessage(null);
+    }
   };
 
   useEffect(() => {
@@ -220,14 +280,34 @@ export default function VoicePage() {
                         <div className={`p-3 rounded-2xl ${
                           message.role === 'user'
                             ? 'bg-[#3B82F6] text-white rounded-tr-sm'
-                            : 'bg-[#334155] text-[#F8FAFC] rounded-tl-sm'
+                            : message.isError
+                              ? 'bg-[#EF4444]/20 text-[#F8FAFC] rounded-tl-sm border border-[#EF4444]/30'
+                              : 'bg-[#334155] text-[#F8FAFC] rounded-tl-sm'
                         }`}>
+                          {message.isError && (
+                            <div className="flex items-center gap-2 mb-2 text-[#EF4444]">
+                              <AlertCircle className="w-4 h-4" />
+                              <span className="text-xs font-medium">오류 발생</span>
+                            </div>
+                          )}
                           <p className="text-sm whitespace-pre-line">{message.content}</p>
-                          <p className={`text-xs mt-1 ${
+                          <div className={`flex items-center justify-between mt-1 ${
                             message.role === 'user' ? 'text-white/50' : 'text-[#64748B]'
                           }`}>
-                            {message.timestamp.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
-                          </p>
+                            <p className="text-xs">
+                              {message.timestamp.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                            {message.isError && lastFailedMessage && (
+                              <button
+                                onClick={handleRetry}
+                                disabled={isTyping}
+                                className="flex items-center gap-1 text-xs text-[#F59E0B] hover:text-[#D97706] disabled:opacity-50"
+                              >
+                                <RefreshCw className="w-3 h-3" />
+                                다시 시도
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </motion.div>

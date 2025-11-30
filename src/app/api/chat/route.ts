@@ -1,9 +1,54 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// Error types for better handling
+type ApiErrorCode =
+  | "MISSING_API_KEY"
+  | "INVALID_REQUEST"
+  | "RATE_LIMITED"
+  | "API_ERROR"
+  | "UNKNOWN_ERROR";
+
+interface ApiError {
+  code: ApiErrorCode;
+  message: string;
+  userMessage: string;
+}
+
+const ERROR_MESSAGES: Record<ApiErrorCode, ApiError> = {
+  MISSING_API_KEY: {
+    code: "MISSING_API_KEY",
+    message: "ANTHROPIC_API_KEY is not configured",
+    userMessage: "시스템 설정 오류입니다. 관리자에게 문의해주세요.",
+  },
+  INVALID_REQUEST: {
+    code: "INVALID_REQUEST",
+    message: "Invalid request format",
+    userMessage: "잘못된 요청입니다. 다시 시도해주세요.",
+  },
+  RATE_LIMITED: {
+    code: "RATE_LIMITED",
+    message: "Rate limit exceeded",
+    userMessage: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
+  },
+  API_ERROR: {
+    code: "API_ERROR",
+    message: "External API error",
+    userMessage: "AI 서비스에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
+  },
+  UNKNOWN_ERROR: {
+    code: "UNKNOWN_ERROR",
+    message: "Unknown error occurred",
+    userMessage: "알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+  },
+};
+
+// Check API key at startup
+const apiKey = process.env.ANTHROPIC_API_KEY;
+
+const client = apiKey
+  ? new Anthropic({ apiKey })
+  : null;
 
 const SYSTEM_PROMPT = `당신은 K-조달 AI 스웜의 음성 상담 에이전트입니다.
 공공조달 전문 AI 어시스턴트로서, 한국의 나라장터, 조달청 관련 업무를 지원합니다.
@@ -32,13 +77,72 @@ const SYSTEM_PROMPT = `당신은 K-조달 AI 스웜의 음성 상담 에이전�
 - 사용자가 묻는 내용에 대해 시스템이 제공하는 것처럼 자연스럽게 응답
 - 응답은 간결하게 2-3문장 이내로, 핵심 정보 위주로 제공`;
 
-export async function POST(request: NextRequest) {
-  try {
-    const { messages } = await request.json();
+// Message validation
+interface ChatMessage {
+  role: string;
+  content: string;
+}
 
-    if (!messages || !Array.isArray(messages)) {
+function validateMessages(messages: unknown): messages is ChatMessage[] {
+  if (!Array.isArray(messages)) return false;
+  return messages.every(
+    (msg) =>
+      typeof msg === "object" &&
+      msg !== null &&
+      typeof msg.role === "string" &&
+      typeof msg.content === "string" &&
+      ["user", "assistant"].includes(msg.role)
+  );
+}
+
+export async function POST(request: NextRequest) {
+  // Check if client is initialized
+  if (!client) {
+    console.error("API Error:", ERROR_MESSAGES.MISSING_API_KEY.message);
+    return NextResponse.json(
+      {
+        error: ERROR_MESSAGES.MISSING_API_KEY.userMessage,
+        code: ERROR_MESSAGES.MISSING_API_KEY.code
+      },
+      { status: 503 }
+    );
+  }
+
+  try {
+    // Parse request body
+    let body;
+    try {
+      body = await request.json();
+    } catch {
       return NextResponse.json(
-        { error: "messages array is required" },
+        {
+          error: ERROR_MESSAGES.INVALID_REQUEST.userMessage,
+          code: ERROR_MESSAGES.INVALID_REQUEST.code
+        },
+        { status: 400 }
+      );
+    }
+
+    const { messages } = body;
+
+    // Validate messages
+    if (!validateMessages(messages)) {
+      return NextResponse.json(
+        {
+          error: ERROR_MESSAGES.INVALID_REQUEST.userMessage,
+          code: ERROR_MESSAGES.INVALID_REQUEST.code
+        },
+        { status: 400 }
+      );
+    }
+
+    // Limit message count to prevent abuse
+    if (messages.length > 50) {
+      return NextResponse.json(
+        {
+          error: "대화가 너무 깁니다. 새로운 대화를 시작해주세요.",
+          code: "MESSAGE_LIMIT_EXCEEDED"
+        },
         { status: 400 }
       );
     }
@@ -47,7 +151,7 @@ export async function POST(request: NextRequest) {
       model: "claude-sonnet-4-20250514",
       max_tokens: 1024,
       system: SYSTEM_PROMPT,
-      messages: messages.map((msg: { role: string; content: string }) => ({
+      messages: messages.map((msg) => ({
         role: msg.role as "user" | "assistant",
         content: msg.content,
       })),
@@ -60,9 +164,36 @@ export async function POST(request: NextRequest) {
       message: assistantMessage,
     });
   } catch (error) {
+    // Log error for debugging (but don't expose to user)
     console.error("Claude API error:", error);
+
+    // Check for specific error types
+    if (error instanceof Anthropic.RateLimitError) {
+      return NextResponse.json(
+        {
+          error: ERROR_MESSAGES.RATE_LIMITED.userMessage,
+          code: ERROR_MESSAGES.RATE_LIMITED.code
+        },
+        { status: 429 }
+      );
+    }
+
+    if (error instanceof Anthropic.APIError) {
+      return NextResponse.json(
+        {
+          error: ERROR_MESSAGES.API_ERROR.userMessage,
+          code: ERROR_MESSAGES.API_ERROR.code
+        },
+        { status: 502 }
+      );
+    }
+
+    // Generic error
     return NextResponse.json(
-      { error: "Failed to get response from AI" },
+      {
+        error: ERROR_MESSAGES.UNKNOWN_ERROR.userMessage,
+        code: ERROR_MESSAGES.UNKNOWN_ERROR.code
+      },
       { status: 500 }
     );
   }

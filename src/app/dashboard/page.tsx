@@ -236,86 +236,86 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">AI 스웜 대시보드</h1>
-          <p className="text-[#94A3B8]">실시간 AI 에이전트 활동 현황</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">AI 스웜 대시보드</h1>
+          <p className="text-sm sm:text-base text-[#94A3B8]">실시간 AI 에이전트 활동 현황</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="border-[#334155] text-white hover:bg-[#1E293B]">
-            <Search className="w-4 h-4 mr-2" />
-            새 입찰 검색
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Button variant="outline" className="border-[#334155] text-white hover:bg-[#1E293B] text-sm">
+            <Search className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">새 입찰 검색</span>
           </Button>
           <Link href="/dashboard/simulation">
-            <Button className="bg-gradient-to-r from-[#3B82F6] to-[#8B5CF6] text-white">
-              <FlaskConical className="w-4 h-4 mr-2" />
-              시뮬레이션 실행
+            <Button className="bg-gradient-to-r from-[#3B82F6] to-[#8B5CF6] text-white text-sm">
+              <FlaskConical className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">시뮬레이션 실행</span>
             </Button>
           </Link>
         </div>
       </div>
 
       {/* Stats overview */}
-      <div className="grid grid-cols-4 gap-4">
-        <Card className="p-4 bg-[#1E293B]/60 border-[#334155]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#3B82F6]/20 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-[#3B82F6]" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4 bg-[#1E293B]/60 border-[#334155]">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-[#3B82F6]/20 flex items-center justify-center">
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-[#3B82F6]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{bidStats.todayNew}</p>
-              <p className="text-sm text-[#64748B]">오늘 신규 공고</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">{bidStats.todayNew}</p>
+              <p className="text-xs sm:text-sm text-[#64748B]">오늘 신규 공고</p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 bg-[#1E293B]/60 border-[#334155]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#22C55E]/20 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-[#22C55E]" />
+        <Card className="p-3 sm:p-4 bg-[#1E293B]/60 border-[#334155]">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-[#22C55E]/20 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-[#22C55E]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{bidStats.recommended}</p>
-              <p className="text-sm text-[#64748B]">AI 추천 공고</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">{bidStats.recommended}</p>
+              <p className="text-xs sm:text-sm text-[#64748B]">AI 추천 공고</p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 bg-[#1E293B]/60 border-[#334155]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#A855F7]/20 flex items-center justify-center">
-              <Brain className="w-5 h-5 text-[#A855F7]" />
+        <Card className="p-3 sm:p-4 bg-[#1E293B]/60 border-[#334155]">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-[#A855F7]/20 flex items-center justify-center">
+              <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-[#A855F7]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{bidStats.analyzing}</p>
-              <p className="text-sm text-[#64748B]">분석 진행 중</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">{bidStats.analyzing}</p>
+              <p className="text-xs sm:text-sm text-[#64748B]">분석 진행 중</p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 bg-[#1E293B]/60 border-[#334155]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#F59E0B]/20 flex items-center justify-center">
-              <AlertCircle className="w-5 h-5 text-[#F59E0B]" />
+        <Card className="p-3 sm:p-4 bg-[#1E293B]/60 border-[#334155]">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-[#F59E0B]/20 flex items-center justify-center">
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-[#F59E0B]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{bidStats.deadlineSoon}</p>
-              <p className="text-sm text-[#64748B]">마감 임박</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">{bidStats.deadlineSoon}</p>
+              <p className="text-xs sm:text-sm text-[#64748B]">마감 임박</p>
             </div>
           </div>
         </Card>
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6">
         {/* Swarm Status */}
-        <div className="col-span-8">
+        <div className="xl:col-span-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">스웜 현황</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-white">스웜 현황</h2>
             <Link href="/dashboard/agents" className="text-sm text-[#3B82F6] hover:underline flex items-center gap-1">
               상세 모니터링 <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {swarmStatuses.map((swarm) => (
               <SwarmCard key={swarm.type} swarm={swarm} />
             ))}
@@ -323,12 +323,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Activity Feed */}
-        <div className="col-span-4">
+        <div className="xl:col-span-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">실시간 활동</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-white">실시간 활동</h2>
             <Badge className="bg-[#22C55E]/20 text-[#22C55E]">Live</Badge>
           </div>
-          <Card className="bg-[#1E293B]/40 border-[#334155] h-[320px]">
+          <Card className="bg-[#1E293B]/40 border-[#334155] h-[280px] sm:h-[320px]">
             <ScrollArea className="h-full">
               <div className="p-2">
                 <AnimatePresence>
@@ -345,12 +345,12 @@ export default function DashboardPage() {
       {/* Recommended Bids */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">AI 추천 입찰공고</h2>
+          <h2 className="text-base sm:text-lg font-semibold text-white">AI 추천 입찰공고</h2>
           <Link href="/dashboard/bids" className="text-sm text-[#3B82F6] hover:underline flex items-center gap-1">
             전체 보기 <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {recommendedBids.map((bid) => (
             <RecommendedBidCard key={bid.id} bid={bid} />
           ))}

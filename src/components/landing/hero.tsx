@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Radar, Brain, Zap, Activity } from "lucide-react";
 import { motion } from "framer-motion";
+import { SWARM_STATUS } from "@/lib/constants/swarm";
 
 // Animated node for swarm visualization
 function SwarmNode({
@@ -192,39 +193,42 @@ export function Hero() {
           {/* Swarm indicators */}
           <div className="flex flex-wrap justify-center gap-8">
             <motion.div
-              className="flex items-center gap-3 px-6 py-3 rounded-xl bg-[#1E293B]/60 border border-[#00D2FF]/30"
+              className="flex items-center gap-3 px-6 py-3 rounded-xl bg-[#1E293B]/60"
+              style={{ borderColor: `${SWARM_STATUS.scout.color}30`, borderWidth: 1 }}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <div className="w-3 h-3 rounded-full bg-[#00D2FF] animate-pulse" />
-              <Radar className="w-5 h-5 text-[#00D2FF]" />
-              <span className="text-[#00D2FF] font-medium">정찰 스웜</span>
-              <span className="text-[#64748B] text-sm">4개 활성</span>
+              <div className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: SWARM_STATUS.scout.color }} />
+              <Radar className="w-5 h-5" style={{ color: SWARM_STATUS.scout.color }} />
+              <span className="font-medium" style={{ color: SWARM_STATUS.scout.color }}>{SWARM_STATUS.scout.name}</span>
+              <span className="text-[#64748B] text-sm">{SWARM_STATUS.scout.activeCount}개 활성</span>
             </motion.div>
 
             <motion.div
-              className="flex items-center gap-3 px-6 py-3 rounded-xl bg-[#1E293B]/60 border border-[#A855F7]/30"
+              className="flex items-center gap-3 px-6 py-3 rounded-xl bg-[#1E293B]/60"
+              style={{ borderColor: `${SWARM_STATUS.brain.color}30`, borderWidth: 1 }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <div className="w-3 h-3 rounded-full bg-[#A855F7] animate-pulse" />
-              <Brain className="w-5 h-5 text-[#A855F7]" />
-              <span className="text-[#A855F7] font-medium">두뇌 스웜</span>
-              <span className="text-[#64748B] text-sm">4개 활성</span>
+              <div className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: SWARM_STATUS.brain.color }} />
+              <Brain className="w-5 h-5" style={{ color: SWARM_STATUS.brain.color }} />
+              <span className="font-medium" style={{ color: SWARM_STATUS.brain.color }}>{SWARM_STATUS.brain.name}</span>
+              <span className="text-[#64748B] text-sm">{SWARM_STATUS.brain.activeCount}개 활성</span>
             </motion.div>
 
             <motion.div
-              className="flex items-center gap-3 px-6 py-3 rounded-xl bg-[#1E293B]/60 border border-[#22C55E]/30"
+              className="flex items-center gap-3 px-6 py-3 rounded-xl bg-[#1E293B]/60"
+              style={{ borderColor: `${SWARM_STATUS.action.color}30`, borderWidth: 1 }}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.7 }}
             >
-              <div className="w-3 h-3 rounded-full bg-[#22C55E] animate-pulse" />
-              <Zap className="w-5 h-5 text-[#22C55E]" />
-              <span className="text-[#22C55E] font-medium">실행 스웜</span>
-              <span className="text-[#64748B] text-sm">3개 활성</span>
+              <div className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: SWARM_STATUS.action.color }} />
+              <Zap className="w-5 h-5" style={{ color: SWARM_STATUS.action.color }} />
+              <span className="font-medium" style={{ color: SWARM_STATUS.action.color }}>{SWARM_STATUS.action.name}</span>
+              <span className="text-[#64748B] text-sm">{SWARM_STATUS.action.activeCount}개 활성</span>
             </motion.div>
           </div>
         </motion.div>
