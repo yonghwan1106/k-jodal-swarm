@@ -149,9 +149,9 @@ export default function ProposalsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
         {/* Left panel - Settings */}
-        <div className="col-span-4 space-y-6">
+        <div className="lg:col-span-4 space-y-4 lg:space-y-6">
           {/* Bid selector */}
           <Card className="p-6 bg-[#1E293B]/60 border-[#334155]">
             <h3 className="font-semibold text-white mb-4">입찰공고 선택</h3>
@@ -268,9 +268,9 @@ export default function ProposalsPage() {
         </div>
 
         {/* Right panel - Preview */}
-        <div className="col-span-8">
+        <div className="lg:col-span-8">
           <Card className="bg-[#1E293B]/40 border-[#334155] h-full">
-            <div className="p-4 border-b border-[#334155] flex items-center justify-between">
+            <div className="p-3 sm:p-4 border-b border-[#334155] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-[#3B82F6]" />
                 <h3 className="font-semibold text-white">제안서 미리보기</h3>
@@ -289,9 +289,9 @@ export default function ProposalsPage() {
               )}
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {!isGenerating && !generationComplete ? (
-                <div className="text-center py-20">
+                <div className="text-center py-12 sm:py-20">
                   <PenTool className="w-16 h-16 text-[#64748B] mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">제안서 작성 대기 중</h3>
                   <p className="text-[#94A3B8] mb-6">
@@ -301,7 +301,7 @@ export default function ProposalsPage() {
                   </p>
                 </div>
               ) : isGenerating ? (
-                <div className="text-center py-20">
+                <div className="text-center py-12 sm:py-20">
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -343,7 +343,7 @@ export default function ProposalsPage() {
                   </div>
 
                   {/* Content area */}
-                  <div className="p-6 rounded-lg bg-white/5 min-h-[400px]">
+                  <div className="p-4 sm:p-6 rounded-lg bg-white/5 min-h-[300px] sm:min-h-[400px]">
                     <h2 className="text-xl font-bold text-white mb-4">
                       {proposalSections[currentSection].title}
                     </h2>

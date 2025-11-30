@@ -96,7 +96,7 @@ function BidCard({ bid }: { bid: BidAnnouncement }) {
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-4 border-t border-[#334155]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-4 border-t border-[#334155] gap-3">
           <div>
             <p className="text-lg font-bold text-white">
               {(bid.estimatedPrice / 100000000).toFixed(1)}억원
@@ -104,15 +104,15 @@ function BidCard({ bid }: { bid: BidAnnouncement }) {
             <p className="text-xs text-[#64748B]">예정가격</p>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
             <div className="text-center">
-              <p className="text-lg font-bold text-[#22C55E]">{bid.winProbability}%</p>
+              <p className="text-base sm:text-lg font-bold text-[#22C55E]">{bid.winProbability}%</p>
               <p className="text-xs text-[#64748B]">낙찰 확률</p>
             </div>
 
             <div className="text-center">
-              <p className="text-lg font-bold text-white">{bid.competitors}</p>
-              <p className="text-xs text-[#64748B]">예상 경쟁사</p>
+              <p className="text-base sm:text-lg font-bold text-white">{bid.competitors}</p>
+              <p className="text-xs text-[#64748B]">경쟁사</p>
             </div>
 
             <div className="text-center">
@@ -152,10 +152,10 @@ export default function BidsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">입찰공고</h1>
-          <p className="text-[#94A3B8]">AI가 분석한 입찰 기회를 확인하세요</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">입찰공고</h1>
+          <p className="text-sm sm:text-base text-[#94A3B8]">AI가 분석한 입찰 기회를 확인하세요</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge className="bg-[#22C55E]/20 text-[#22C55E]">
@@ -165,8 +165,8 @@ export default function BidsPage() {
       </div>
 
       {/* Search and filters */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col lg:flex-row gap-3 lg:gap-4">
+        <div className="relative flex-1 lg:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
           <input
             type="text"
@@ -174,15 +174,16 @@ export default function BidsPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full h-10 pl-10 pr-4 rounded-lg bg-[#1E293B] border border-[#334155] text-white placeholder-[#64748B] text-sm focus:outline-none focus:border-[#3B82F6]"
+            aria-label="입찰공고 검색"
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
           <Button
             variant={filter === 'all' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('all')}
-            className={filter === 'all' ? 'bg-[#3B82F6]' : 'border-[#334155] text-[#94A3B8] hover:bg-[#1E293B]'}
+            className={`flex-shrink-0 ${filter === 'all' ? 'bg-[#3B82F6]' : 'border-[#334155] text-[#94A3B8] hover:bg-[#1E293B]'}`}
           >
             전체 ({mockBids.length})
           </Button>
@@ -190,7 +191,7 @@ export default function BidsPage() {
             variant={filter === 'recommended' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('recommended')}
-            className={filter === 'recommended' ? 'bg-[#22C55E]' : 'border-[#334155] text-[#94A3B8] hover:bg-[#1E293B]'}
+            className={`flex-shrink-0 ${filter === 'recommended' ? 'bg-[#22C55E]' : 'border-[#334155] text-[#94A3B8] hover:bg-[#1E293B]'}`}
           >
             <Sparkles className="w-4 h-4 mr-1" />
             AI 추천 ({mockBids.filter(b => b.status === 'recommended').length})
@@ -199,7 +200,7 @@ export default function BidsPage() {
             variant={filter === 'analyzing' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('analyzing')}
-            className={filter === 'analyzing' ? 'bg-[#A855F7]' : 'border-[#334155] text-[#94A3B8] hover:bg-[#1E293B]'}
+            className={`flex-shrink-0 ${filter === 'analyzing' ? 'bg-[#A855F7]' : 'border-[#334155] text-[#94A3B8] hover:bg-[#1E293B]'}`}
           >
             분석 중 ({mockBids.filter(b => b.status === 'analyzing').length})
           </Button>
@@ -207,62 +208,61 @@ export default function BidsPage() {
             variant={filter === 'new' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilter('new')}
-            className={filter === 'new' ? 'bg-[#64748B]' : 'border-[#334155] text-[#94A3B8] hover:bg-[#1E293B]'}
+            className={`flex-shrink-0 ${filter === 'new' ? 'bg-[#64748B]' : 'border-[#334155] text-[#94A3B8] hover:bg-[#1E293B]'}`}
           >
             신규 ({mockBids.filter(b => b.status === 'new').length})
           </Button>
+          <Button variant="outline" size="sm" className="flex-shrink-0 border-[#334155] text-[#94A3B8] hover:bg-[#1E293B]">
+            <SlidersHorizontal className="w-4 h-4 mr-1" />
+            필터
+          </Button>
         </div>
-
-        <Button variant="outline" size="sm" className="border-[#334155] text-[#94A3B8] hover:bg-[#1E293B]">
-          <SlidersHorizontal className="w-4 h-4 mr-1" />
-          필터
-        </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        <Card className="p-4 bg-[#1E293B]/40 border-[#334155]">
-          <div className="flex items-center gap-3">
-            <TrendingUp className="w-5 h-5 text-[#22C55E]" />
-            <div>
-              <p className="text-xl font-bold text-white">{bidStats.highMatch}</p>
-              <p className="text-sm text-[#64748B]">고매칭 (80+)</p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4 bg-[#1E293B]/40 border-[#334155]">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <TrendingUp className="w-4 sm:w-5 h-4 sm:h-5 text-[#22C55E] flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-lg sm:text-xl font-bold text-white">{bidStats.highMatch}</p>
+              <p className="text-xs sm:text-sm text-[#64748B] truncate">고매칭 (80+)</p>
             </div>
           </div>
         </Card>
-        <Card className="p-4 bg-[#1E293B]/40 border-[#334155]">
-          <div className="flex items-center gap-3">
-            <Clock className="w-5 h-5 text-[#F59E0B]" />
-            <div>
-              <p className="text-xl font-bold text-white">{bidStats.deadlineSoon}</p>
-              <p className="text-sm text-[#64748B]">마감 임박 (3일 내)</p>
+        <Card className="p-3 sm:p-4 bg-[#1E293B]/40 border-[#334155]">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-[#F59E0B] flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-lg sm:text-xl font-bold text-white">{bidStats.deadlineSoon}</p>
+              <p className="text-xs sm:text-sm text-[#64748B] truncate">마감 임박</p>
             </div>
           </div>
         </Card>
-        <Card className="p-4 bg-[#1E293B]/40 border-[#334155]">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-[#EF4444]" />
-            <div>
-              <p className="text-xl font-bold text-white">
+        <Card className="p-3 sm:p-4 bg-[#1E293B]/40 border-[#334155]">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <AlertTriangle className="w-4 sm:w-5 h-4 sm:h-5 text-[#EF4444] flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-lg sm:text-xl font-bold text-white">
                 {mockBids.filter(b => b.riskLevel === 'high').length}
               </p>
-              <p className="text-sm text-[#64748B]">고위험 공고</p>
+              <p className="text-xs sm:text-sm text-[#64748B] truncate">고위험 공고</p>
             </div>
           </div>
         </Card>
-        <Card className="p-4 bg-[#1E293B]/40 border-[#334155]">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-5 h-5 text-[#F59E0B]" />
-            <div>
-              <p className="text-xl font-bold text-white">{bidStats.avgMatchScore}점</p>
-              <p className="text-sm text-[#64748B]">평균 매칭 점수</p>
+        <Card className="p-3 sm:p-4 bg-[#1E293B]/40 border-[#334155]">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Sparkles className="w-4 sm:w-5 h-4 sm:h-5 text-[#F59E0B] flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-lg sm:text-xl font-bold text-white">{bidStats.avgMatchScore}점</p>
+              <p className="text-xs sm:text-sm text-[#64748B] truncate">평균 매칭</p>
             </div>
           </div>
         </Card>
       </div>
 
       {/* Bids grid */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {filteredBids.map((bid) => (
           <BidCard key={bid.id} bid={bid} />
         ))}

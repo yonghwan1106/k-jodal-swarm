@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,10 @@ export default function SimulationPage() {
   const [priceInput, setPriceInput] = useState(selectedBid.estimatedPrice * 0.92);
   const [techScore, setTechScore] = useState(88);
 
-  const simulation = simulationResults[selectedBid.id] || simulationResults['bid-2024-001'];
+  const simulation = useMemo(() =>
+    simulationResults[selectedBid.id] || simulationResults['bid-2024-001'],
+    [selectedBid.id]
+  );
 
   const runSimulation = useCallback(() => {
     setIsSimulating(true);
@@ -63,15 +66,18 @@ export default function SimulationPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const calculateWinProbability = (price: number, tech: number) => {
+  const calculateWinProbability = useCallback((price: number, tech: number) => {
     const priceScore = Math.min(100, (selectedBid.estimatedPrice / price) * 100);
     const totalScore = tech * 0.4 + priceScore * 0.6;
     const baseProb = (totalScore - 70) * 3;
     const competitorPenalty = (selectedBid.competitors - 1) * 2;
     return Math.min(95, Math.max(5, baseProb - competitorPenalty));
-  };
+  }, [selectedBid.estimatedPrice, selectedBid.competitors]);
 
-  const currentWinProb = calculateWinProbability(priceInput, techScore);
+  const currentWinProb = useMemo(() =>
+    calculateWinProbability(priceInput, techScore),
+    [calculateWinProbability, priceInput, techScore]
+  );
 
   return (
     <div className="space-y-6">
@@ -86,9 +92,9 @@ export default function SimulationPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
         {/* Left panel - Settings */}
-        <div className="col-span-4 space-y-6">
+        <div className="lg:col-span-4 space-y-4 lg:space-y-6">
           {/* Bid selector */}
           <Card className="p-6 bg-[#1E293B]/60 border-[#334155]">
             <h3 className="font-semibold text-white mb-4">입찰공고 선택</h3>
@@ -218,7 +224,7 @@ export default function SimulationPage() {
         </div>
 
         {/* Right panel - Results */}
-        <div className="col-span-8 space-y-6">
+        <div className="lg:col-span-8 space-y-4 lg:space-y-6">
           {/* Simulation progress */}
           <AnimatePresence>
             {isSimulating && (
@@ -246,22 +252,22 @@ export default function SimulationPage() {
                     <Progress value={simulationProgress} className="h-3 bg-[#334155]" />
                   </div>
 
-                  <div className="grid grid-cols-4 gap-4 mt-4">
-                    <div className="text-center p-3 rounded-lg bg-[#334155]/50">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mt-4">
+                    <div className="text-center p-2 sm:p-3 rounded-lg bg-[#334155]/50">
                       <p className="text-xs text-[#64748B]">경쟁사 모델</p>
-                      <p className="text-white font-medium">분석 중</p>
+                      <p className="text-white font-medium text-sm sm:text-base">분석 중</p>
                     </div>
-                    <div className="text-center p-3 rounded-lg bg-[#334155]/50">
+                    <div className="text-center p-2 sm:p-3 rounded-lg bg-[#334155]/50">
                       <p className="text-xs text-[#64748B]">가격 시나리오</p>
-                      <p className="text-white font-medium">계산 중</p>
+                      <p className="text-white font-medium text-sm sm:text-base">계산 중</p>
                     </div>
-                    <div className="text-center p-3 rounded-lg bg-[#334155]/50">
+                    <div className="text-center p-2 sm:p-3 rounded-lg bg-[#334155]/50">
                       <p className="text-xs text-[#64748B]">리스크 분석</p>
-                      <p className="text-white font-medium">대기 중</p>
+                      <p className="text-white font-medium text-sm sm:text-base">대기 중</p>
                     </div>
-                    <div className="text-center p-3 rounded-lg bg-[#334155]/50">
+                    <div className="text-center p-2 sm:p-3 rounded-lg bg-[#334155]/50">
                       <p className="text-xs text-[#64748B]">최적화</p>
-                      <p className="text-white font-medium">대기 중</p>
+                      <p className="text-white font-medium text-sm sm:text-base">대기 중</p>
                     </div>
                   </div>
                 </Card>
@@ -287,33 +293,33 @@ export default function SimulationPage() {
                       <h3 className="text-xl font-bold text-white mb-1">AI 추천 전략</h3>
                       <p className="text-[#94A3B8] mb-4">10,000회 시뮬레이션 분석 결과</p>
 
-                      <div className="grid grid-cols-3 gap-4 mb-4">
-                        <div className="p-4 rounded-lg bg-[#1E293B]">
-                          <p className="text-sm text-[#64748B]">최적 제안가</p>
-                          <p className="text-2xl font-bold text-white">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
+                        <div className="p-3 sm:p-4 rounded-lg bg-[#1E293B]">
+                          <p className="text-xs sm:text-sm text-[#64748B]">최적 제안가</p>
+                          <p className="text-xl sm:text-2xl font-bold text-white">
                             {(simulation.recommendation.optimalPrice / 100000000).toFixed(2)}억
                           </p>
                         </div>
-                        <div className="p-4 rounded-lg bg-[#1E293B]">
-                          <p className="text-sm text-[#64748B]">예상 낙찰 확률</p>
-                          <p className="text-2xl font-bold text-[#22C55E]">
+                        <div className="p-3 sm:p-4 rounded-lg bg-[#1E293B]">
+                          <p className="text-xs sm:text-sm text-[#64748B]">예상 낙찰 확률</p>
+                          <p className="text-xl sm:text-2xl font-bold text-[#22C55E]">
                             {simulation.recommendation.expectedWinRate}%
                           </p>
                         </div>
-                        <div className="p-4 rounded-lg bg-[#1E293B]">
-                          <p className="text-sm text-[#64748B]">신뢰도</p>
-                          <p className="text-2xl font-bold text-[#3B82F6]">
+                        <div className="p-3 sm:p-4 rounded-lg bg-[#1E293B]">
+                          <p className="text-xs sm:text-sm text-[#64748B]">신뢰도</p>
+                          <p className="text-xl sm:text-2xl font-bold text-[#3B82F6]">
                             {simulation.recommendation.confidenceLevel}%
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex gap-3">
-                        <Button className="bg-[#22C55E] hover:bg-[#16A34A]">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                        <Button className="bg-[#22C55E] hover:bg-[#16A34A] w-full sm:w-auto">
                           <CheckCircle className="w-4 h-4 mr-2" />
                           이 전략으로 제안서 작성
                         </Button>
-                        <Button variant="outline" className="border-[#334155] text-white hover:bg-[#1E293B]">
+                        <Button variant="outline" className="border-[#334155] text-white hover:bg-[#1E293B] w-full sm:w-auto">
                           <BarChart3 className="w-4 h-4 mr-2" />
                           상세 리포트 보기
                         </Button>
@@ -382,9 +388,9 @@ export default function SimulationPage() {
                     <Users className="w-5 h-5 text-[#A855F7]" />
                     경쟁사 분석
                   </h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     {simulation.competitors.map((comp, i) => (
-                      <div key={i} className="p-4 rounded-lg bg-[#334155]/50">
+                      <div key={i} className="p-3 sm:p-4 rounded-lg bg-[#334155]/50">
                         <div className="flex items-center justify-between mb-3">
                           <span className="font-medium text-white">{comp.name}</span>
                           <span className="text-[#94A3B8] text-sm">

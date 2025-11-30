@@ -152,10 +152,109 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
   code?: string;
+  success?: boolean;
 }
 
 export interface ChatApiResponse {
   message: string;
+  conversationId?: string;
+  timestamp?: string;
+}
+
+export interface ChatApiRequest {
+  messages: Array<{
+    role: "user" | "assistant";
+    content: string;
+  }>;
+  conversationId?: string;
+}
+
+// API Error Types
+export type ApiErrorCode =
+  | "RATE_LIMITED"
+  | "API_ERROR"
+  | "NETWORK_ERROR"
+  | "INVALID_REQUEST"
+  | "SERVER_ERROR"
+  | "UNAUTHORIZED"
+  | "NOT_FOUND";
+
+export interface ApiError {
+  code: ApiErrorCode;
+  message: string;
+  userMessage: string;
+  retryable?: boolean;
+}
+
+// Bid API Types
+export interface BidListResponse {
+  bids: Bid[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface BidDetailResponse {
+  bid: Bid;
+  relatedBids?: Bid[];
+}
+
+// Simulation API Types
+export interface SimulationRequest {
+  bidId: string;
+  proposedPrice: number;
+  techScore: number;
+  iterations?: number;
+}
+
+export interface SimulationResponse {
+  bidId: string;
+  scenarios: SimulationScenario[];
+  recommendation: SimulationRecommendation;
+  completedAt: string;
+}
+
+// Proposal API Types
+export interface ProposalGenerateRequest {
+  bidId: string;
+  companyId?: string;
+  options?: {
+    focusAreas?: string[];
+    tone?: "formal" | "technical" | "persuasive";
+  };
+}
+
+export interface ProposalGenerateResponse {
+  proposalId: string;
+  status: ProposalStatus;
+  progress: number;
+  sections: ProposalSection[];
+}
+
+// Agent API Types
+export interface AgentStatusResponse {
+  agents: Agent[];
+  swarmStatus: SwarmStatus[];
+  totalTasks: number;
+  activeAgents: number;
+}
+
+// Pagination Types
+export interface PaginationParams {
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 // Navigation Types
