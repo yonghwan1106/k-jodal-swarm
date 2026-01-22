@@ -148,7 +148,7 @@ export function Hero() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1E293B]/80 border border-[#3B82F6]/30 mb-8">
             <Sparkles className="w-4 h-4 text-[#3B82F6]" />
-            <span className="text-sm text-[#94A3B8]">조금 특별한 조달 공모전</span>
+            <span className="text-sm text-[#94A3B8]">AI부트캠프 창업 아이디어</span>
           </div>
 
           {/* Title */}
