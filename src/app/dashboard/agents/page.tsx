@@ -298,16 +298,16 @@ export default function AgentsPage() {
         </div>
 
         {/* Activity feed */}
-        <div className="xl:col-span-4">
+        <div className="xl:col-span-4" role="region" aria-label="실시간 에이전트 활동 로그">
           <Card className="bg-[#1E293B]/40 border-[#334155] h-full">
             <div className="p-4 border-b border-[#334155]">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-white">실시간 활동 로그</h3>
-                <Badge className="bg-[#22C55E]/20 text-[#22C55E]">Live</Badge>
+                <Badge className="bg-[#22C55E]/20 text-[#22C55E]" aria-label="실시간 업데이트 중">Live</Badge>
               </div>
             </div>
             <ScrollArea className="h-[400px] xl:h-[calc(100vh-350px)]">
-              <div className="p-3 space-y-2">
+              <div className="p-3 space-y-2" aria-live="polite" aria-atomic="false">
                 {activities.map((activity) => {
                   const Icon = agentIcons[activity.agentType];
                   const color = agentColors[activity.agentType];

@@ -18,7 +18,10 @@ import {
   ArrowRight,
   Search,
   FlaskConical,
-  Mic
+  Mic,
+  Wifi,
+  WifiOff,
+  RefreshCw
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -28,7 +31,15 @@ import {
   AgentActivity,
   AgentType
 } from "@/lib/mock-data/agents";
-import { mockBids, bidStats } from "@/lib/mock-data/bids";
+import { useBids } from "@/hooks/useBids";
+import { BidResponse } from "@/lib/api";
+
+// Extended type for G2B API raw fields
+type BidWithRawFields = BidResponse & {
+  closeDateTime?: string;
+  bidNtceDt?: string;
+  publishDate?: string;
+};
 
 // Agent colors
 const agentColors: Record<AgentType, string> = {
@@ -44,6 +55,7 @@ const agentIcons: Record<AgentType, React.ElementType> = {
   action: Zap,
   voice: Mic
 };
+
 
 // Swarm Status Card
 function SwarmCard({ swarm }: { swarm: typeof swarmStatuses[0] }) {
@@ -149,7 +161,16 @@ function ActivityItem({ activity }: { activity: AgentActivity }) {
 }
 
 // Recommended Bid Card
-function RecommendedBidCard({ bid }: { bid: typeof mockBids[0] }) {
+function RecommendedBidCard({ bid }: { bid: BidWithRawFields }) {
+  const deadline = bid.deadline || bid.closeDateTime;
+  const daysUntilDeadline = deadline
+    ? Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : 0;
+
+  const urgency = bid.urgency;
+  const matchScore = bid.matchScore;
+  const winProbability = bid.winProbability;
+
   return (
     <Link href={`/dashboard/bids/${bid.id}`}>
       <Card className="p-4 bg-[#1E293B]/40 border-[#334155] hover:border-[#3B82F6]/50 transition-all cursor-pointer">
@@ -157,14 +178,14 @@ function RecommendedBidCard({ bid }: { bid: typeof mockBids[0] }) {
           <Badge
             className="text-xs"
             style={{
-              backgroundColor: bid.urgency === 'critical' ? '#EF444420' : bid.urgency === 'urgent' ? '#F59E0B20' : '#3B82F620',
-              color: bid.urgency === 'critical' ? '#EF4444' : bid.urgency === 'urgent' ? '#F59E0B' : '#3B82F6'
+              backgroundColor: urgency === 'critical' ? '#EF444420' : urgency === 'urgent' ? '#F59E0B20' : '#3B82F620',
+              color: urgency === 'critical' ? '#EF4444' : urgency === 'urgent' ? '#F59E0B' : '#3B82F6'
             }}
           >
-            {bid.urgency === 'critical' ? '긴급' : bid.urgency === 'urgent' ? '주의' : '일반'}
+            {urgency === 'critical' ? '긴급' : urgency === 'urgent' ? '주의' : '일반'}
           </Badge>
           <div className="text-right">
-            <p className="text-lg font-bold text-white">{bid.matchScore}점</p>
+            <p className="text-lg font-bold text-white">{matchScore}점</p>
             <p className="text-xs text-[#64748B]">매칭 점수</p>
           </div>
         </div>
@@ -175,12 +196,14 @@ function RecommendedBidCard({ bid }: { bid: typeof mockBids[0] }) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-white">
-              {(bid.estimatedPrice / 100000000).toFixed(1)}억원
+              {bid.estimatedPrice
+                ? (bid.estimatedPrice / 100000000).toFixed(1) + '억원'
+                : '가격 미정'}
             </p>
             <p className="text-xs text-[#64748B]">예정가격</p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-medium text-[#22C55E]">{bid.winProbability}%</p>
+            <p className="text-sm font-medium text-[#22C55E]">{winProbability}%</p>
             <p className="text-xs text-[#64748B]">낙찰 확률</p>
           </div>
         </div>
@@ -188,7 +211,7 @@ function RecommendedBidCard({ bid }: { bid: typeof mockBids[0] }) {
         <div className="mt-3 pt-3 border-t border-[#334155]">
           <div className="flex items-center gap-2 text-xs text-[#94A3B8]">
             <Clock className="w-3.5 h-3.5" />
-            <span>마감: {new Date(bid.deadline).toLocaleDateString('ko-KR')}</span>
+            <span>마감: {deadline ? new Date(deadline).toLocaleDateString('ko-KR') : '미정'}</span>
           </div>
         </div>
       </Card>
@@ -196,8 +219,32 @@ function RecommendedBidCard({ bid }: { bid: typeof mockBids[0] }) {
   );
 }
 
+// Loading skeleton for bid cards
+function BidCardSkeleton() {
+  return (
+    <Card className="p-4 bg-[#1E293B]/40 border-[#334155] animate-pulse">
+      <div className="flex items-start justify-between mb-3">
+        <div className="h-5 w-12 bg-[#334155] rounded" />
+        <div className="h-8 w-16 bg-[#334155] rounded" />
+      </div>
+      <div className="h-5 w-3/4 bg-[#334155] rounded mb-2" />
+      <div className="h-4 w-1/2 bg-[#334155] rounded mb-3" />
+      <div className="flex justify-between">
+        <div className="h-8 w-20 bg-[#334155] rounded" />
+        <div className="h-8 w-16 bg-[#334155] rounded" />
+      </div>
+    </Card>
+  );
+}
+
 export default function DashboardPage() {
   const [activities, setActivities] = useState<AgentActivity[]>(recentActivities);
+
+  // Use real API with useBids hook
+  const { bids, loading, error, isFallback, stats, refetch } = useBids({
+    autoRefresh: true,
+    refreshInterval: 5 * 60 * 1000, // 5분마다 자동 갱신
+  });
 
   // Simulate real-time activity generation
   useEffect(() => {
@@ -231,7 +278,24 @@ export default function DashboardPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const recommendedBids = mockBids.filter(bid => bid.status === 'recommended').slice(0, 4);
+  const recommendedBids = bids.filter(bid => bid.status === 'recommended').slice(0, 4);
+
+  // Calculate dynamic stats based on actual data
+  const todayNew = bids.filter(bid => {
+    const publishDate = bid.publishedAt;
+    if (!publishDate) return false;
+    const today = new Date().toDateString();
+    return new Date(publishDate).toDateString() === today;
+  }).length || stats.todayNew;
+
+  const recommendedCount = bids.filter(bid => bid.status === 'recommended').length || stats.recommended;
+  const analyzingCount = bids.filter(bid => bid.status === 'analyzing').length || stats.analyzing;
+  const deadlineSoonCount = bids.filter(bid => {
+    const deadline = bid.deadline;
+    if (!deadline) return false;
+    const daysLeft = Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    return daysLeft <= 7 && daysLeft > 0;
+  }).length || stats.deadlineSoon;
 
   return (
     <div className="space-y-6">
@@ -242,6 +306,28 @@ export default function DashboardPage() {
           <p className="text-sm sm:text-base text-[#94A3B8]">실시간 AI 에이전트 활동 현황</p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Live/Mock 상태 표시 */}
+          <Badge
+            className={isFallback
+              ? "bg-[#F59E0B]/20 text-[#F59E0B]"
+              : "bg-[#22C55E]/20 text-[#22C55E]"
+            }
+          >
+            {isFallback ? (
+              <><WifiOff className="w-3 h-3 mr-1" /> Mock</>
+            ) : (
+              <><Wifi className="w-3 h-3 mr-1" /> Live</>
+            )}
+          </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={loading}
+            className="border-[#334155] text-[#94A3B8] hover:bg-[#1E293B]"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
           <Button variant="outline" className="border-[#334155] text-white hover:bg-[#1E293B] text-sm">
             <Search className="w-4 h-4 sm:mr-2" />
             <span className="hidden sm:inline">새 입찰 검색</span>
@@ -255,6 +341,17 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Error message */}
+      {error && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="p-4 bg-[#EF4444]/10 border border-[#EF4444]/30 rounded-lg"
+        >
+          <p className="text-[#EF4444] text-sm">{error}</p>
+        </div>
+      )}
+
       {/* Stats overview */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="p-3 sm:p-4 bg-[#1E293B]/60 border-[#334155]">
@@ -263,7 +360,7 @@ export default function DashboardPage() {
               <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-[#3B82F6]" />
             </div>
             <div>
-              <p className="text-xl sm:text-2xl font-bold text-white">{bidStats.todayNew}</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">{todayNew}</p>
               <p className="text-xs sm:text-sm text-[#64748B]">오늘 신규 공고</p>
             </div>
           </div>
@@ -275,7 +372,7 @@ export default function DashboardPage() {
               <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-[#22C55E]" />
             </div>
             <div>
-              <p className="text-xl sm:text-2xl font-bold text-white">{bidStats.recommended}</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">{recommendedCount}</p>
               <p className="text-xs sm:text-sm text-[#64748B]">AI 추천 공고</p>
             </div>
           </div>
@@ -287,7 +384,7 @@ export default function DashboardPage() {
               <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-[#A855F7]" />
             </div>
             <div>
-              <p className="text-xl sm:text-2xl font-bold text-white">{bidStats.analyzing}</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">{analyzingCount}</p>
               <p className="text-xs sm:text-sm text-[#64748B]">분석 진행 중</p>
             </div>
           </div>
@@ -299,7 +396,7 @@ export default function DashboardPage() {
               <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-[#F59E0B]" />
             </div>
             <div>
-              <p className="text-xl sm:text-2xl font-bold text-white">{bidStats.deadlineSoon}</p>
+              <p className="text-xl sm:text-2xl font-bold text-white">{deadlineSoonCount}</p>
               <p className="text-xs sm:text-sm text-[#64748B]">마감 임박</p>
             </div>
           </div>
@@ -323,14 +420,14 @@ export default function DashboardPage() {
         </div>
 
         {/* Activity Feed */}
-        <div className="xl:col-span-4">
+        <div className="xl:col-span-4" role="region" aria-label="실시간 에이전트 활동">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base sm:text-lg font-semibold text-white">실시간 활동</h2>
-            <Badge className="bg-[#22C55E]/20 text-[#22C55E]">Live</Badge>
+            <Badge className="bg-[#22C55E]/20 text-[#22C55E]" aria-label="실시간 업데이트 중">Live</Badge>
           </div>
           <Card className="bg-[#1E293B]/40 border-[#334155] h-[280px] sm:h-[320px]">
             <ScrollArea className="h-full">
-              <div className="p-2">
+              <div className="p-2" aria-live="polite" aria-atomic="false">
                 <AnimatePresence>
                   {activities.map((activity) => (
                     <ActivityItem key={activity.id} activity={activity} />
@@ -350,11 +447,30 @@ export default function DashboardPage() {
             전체 보기 <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {recommendedBids.map((bid) => (
-            <RecommendedBidCard key={bid.id} bid={bid} />
-          ))}
-        </div>
+        {loading && bids.length === 0 ? (
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
+            aria-busy="true"
+            aria-label="입찰공고 로딩 중"
+          >
+            {[...Array(4)].map((_, i) => (
+              <BidCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : recommendedBids.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {recommendedBids.map((bid) => (
+              <RecommendedBidCard key={bid.id} bid={bid as BidWithRawFields} />
+            ))}
+          </div>
+        ) : (
+          <Card className="p-8 bg-[#1E293B]/40 border-[#334155] text-center">
+            <p className="text-[#64748B]">AI 추천 입찰공고가 없습니다.</p>
+            <Link href="/dashboard/bids" className="text-sm text-[#3B82F6] hover:underline mt-2 inline-block">
+              전체 입찰공고 보기
+            </Link>
+          </Card>
+        )}
       </div>
     </div>
   );

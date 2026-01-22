@@ -11,7 +11,7 @@ export default function DashboardLayout({
 }) {
   return (
     <MobileMenuProvider>
-      <div className="min-h-screen bg-[#0F172A]">
+      <div className="min-h-screen bg-background">
         <Sidebar />
         {/* Main content - responsive margin */}
         <div className="lg:ml-64 transition-[margin] duration-300">

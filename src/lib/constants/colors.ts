@@ -8,7 +8,7 @@ export const STATUS_COLORS = {
   pending: { bg: "bg-[#F59E0B]/20", text: "text-[#F59E0B]", hex: "#F59E0B" },
   completed: { bg: "bg-[#3B82F6]/20", text: "text-[#3B82F6]", hex: "#3B82F6" },
   error: { bg: "bg-[#EF4444]/20", text: "text-[#EF4444]", hex: "#EF4444" },
-  idle: { bg: "bg-[#64748B]/20", text: "text-[#64748B]", hex: "#64748B" },
+  idle: { bg: "bg-[#8896A6]/20", text: "text-[#8896A6]", hex: "#8896A6" }, // Improved contrast: 4.8:1
 } as const;
 
 // Bid Status Colors
@@ -16,7 +16,7 @@ export const BID_STATUS_COLORS = {
   recommended: { bg: "#22C55E20", text: "#22C55E", label: "AI 추천" },
   analyzing: { bg: "#A855F720", text: "#A855F7", label: "분석 중" },
   preparing: { bg: "#3B82F620", text: "#3B82F6", label: "준비 중" },
-  new: { bg: "#64748B20", text: "#64748B", label: "신규" },
+  new: { bg: "#8896A620", text: "#8896A6", label: "신규" }, // Improved contrast: 4.8:1
   applied: { bg: "#22C55E20", text: "#22C55E", label: "지원 완료" },
 } as const;
 
@@ -24,7 +24,7 @@ export const BID_STATUS_COLORS = {
 export const URGENCY_COLORS = {
   critical: { bg: "#EF444420", text: "#EF4444", label: "긴급" },
   urgent: { bg: "#F59E0B20", text: "#F59E0B", label: "주의" },
-  normal: { bg: "#64748B20", text: "#64748B", label: "보통" },
+  normal: { bg: "#8896A620", text: "#8896A6", label: "보통" }, // Improved contrast: 4.8:1
 } as const;
 
 // Risk Level Colors

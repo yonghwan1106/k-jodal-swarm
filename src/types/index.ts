@@ -264,3 +264,99 @@ export interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   ariaLabel: string;
 }
+
+// ============================================
+// Component Props Interfaces
+// ============================================
+
+// Bid Card Props
+export interface BidCardProps {
+  bid: Bid & {
+    closeDateTime?: string;
+    bidNtceDt?: string;
+    publishDate?: string;
+    description?: string;
+    riskLevel?: "low" | "medium" | "high";
+  };
+  className?: string;
+  onClick?: () => void;
+}
+
+// Swarm Card Props
+export interface SwarmCardProps {
+  swarm: SwarmStatus;
+  className?: string;
+}
+
+// Activity Item Props
+export interface ActivityItemProps {
+  activity: AgentActivity;
+  showTimestamp?: boolean;
+  className?: string;
+}
+
+// Agent Card Props
+export interface AgentCardProps {
+  agent: Agent;
+  isSelected?: boolean;
+  onClick?: () => void;
+  className?: string;
+}
+
+// Swarm Section Props
+export interface SwarmSectionProps {
+  type: AgentType;
+  agents: Agent[];
+  title: string;
+  description: string;
+  className?: string;
+}
+
+// Stats Card Props
+export interface StatsCardProps {
+  icon: React.ComponentType<{ className?: string }>;
+  iconColor: string;
+  value: string | number;
+  label: string;
+  className?: string;
+}
+
+// Filter Button Props
+export interface FilterButtonProps {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  activeColor?: string;
+  className?: string;
+}
+
+// Loading Skeleton Props
+export interface SkeletonProps {
+  className?: string;
+  count?: number;
+}
+
+// Badge Props Extension
+export interface StatusBadgeProps {
+  status: BidStatus | AgentStatus | "active" | "idle" | "processing";
+  label?: string;
+  className?: string;
+}
+
+// Modal Props
+export interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  children: React.ReactNode;
+  className?: string;
+}
+
+// Search Input Props
+export interface SearchInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+  "aria-label"?: string;
+}

@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Mic,
+  MicOff,
   Phone,
   PhoneOff,
   Volume2,
+  VolumeX,
   Send,
   User,
   Bot,
@@ -21,6 +23,8 @@ import {
   AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
+import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 
 interface Message {
   id: string;
@@ -89,6 +93,65 @@ export default function VoicePage() {
   const [inputText, setInputText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const [conversationHistory, setConversationHistory] = useState<{role: string; content: string}[]>([]);
+  const [autoSpeak, setAutoSpeak] = useState(true);
+
+  // Speech Recognition Hook
+  const {
+    isListening,
+    isSupported: isRecognitionSupported,
+    transcript,
+    interimTranscript,
+    startListening,
+    stopListening,
+    resetTranscript,
+  } = useSpeechRecognition({
+    lang: "ko-KR",
+    continuous: false,
+    interimResults: true,
+    onResult: (text, isFinal) => {
+      if (isFinal && text.trim()) {
+        setInputText(text.trim());
+      }
+    },
+    onError: (error) => {
+      console.error("Speech recognition error:", error);
+    },
+  });
+
+  // Speech Synthesis Hook
+  const {
+    isSupported: isSynthesisSupported,
+    isSpeaking,
+    speak,
+    cancel: cancelSpeech,
+  } = useSpeechSynthesis({
+    lang: "ko-KR",
+    rate: 1.0,
+    pitch: 1.0,
+    volume: 1.0,
+  });
+
+  // Update input text with interim results
+  useEffect(() => {
+    if (interimTranscript) {
+      setInputText(interimTranscript);
+    }
+  }, [interimTranscript]);
+
+  // Auto-send when final transcript is received
+  useEffect(() => {
+    if (transcript && !isListening) {
+      // Small delay to allow user to see the text before sending
+      const timer = setTimeout(() => {
+        if (transcript.trim()) {
+          handleSendWithText(transcript.trim());
+          resetTranscript();
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transcript, isListening]);
 
   const addMessage = useCallback((role: 'user' | 'ai', content: string, isError = false) => {
     setMessages(prev => [...prev, {
@@ -171,15 +234,21 @@ export default function VoicePage() {
     setIsTyping(false);
     addMessage('ai', message, isError);
 
+    // Auto-speak AI response if enabled
+    if (!isError && autoSpeak && isSynthesisSupported) {
+      const cleanedMessage = stripMarkdown(message);
+      speak(cleanedMessage);
+    }
+
     if (isError) {
       setLastFailedMessage(scenario.userMessage);
     }
   };
 
-  const handleSend = async () => {
-    if (!inputText.trim() || isTyping) return;
+  const handleSendWithText = async (text: string) => {
+    if (!text.trim() || isTyping) return;
 
-    const userMessage = inputText.trim();
+    const userMessage = text.trim();
     addMessage('user', userMessage);
     setInputText('');
     setIsTyping(true);
@@ -191,9 +260,38 @@ export default function VoicePage() {
     setIsTyping(false);
     addMessage('ai', message, isError);
 
+    // Auto-speak AI response if enabled
+    if (!isError && autoSpeak && isSynthesisSupported) {
+      const cleanedMessage = stripMarkdown(message);
+      speak(cleanedMessage);
+    }
+
     if (isError) {
       setLastFailedMessage(userMessage);
     }
+  };
+
+  const handleSend = async () => {
+    if (!inputText.trim() || isTyping) return;
+    await handleSendWithText(inputText.trim());
+  };
+
+  // Toggle microphone
+  const toggleMicrophone = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      cancelSpeech(); // Stop any ongoing speech
+      startListening();
+    }
+  };
+
+  // Toggle auto-speak
+  const toggleAutoSpeak = () => {
+    if (isSpeaking) {
+      cancelSpeech();
+    }
+    setAutoSpeak(!autoSpeak);
   };
 
   const handleRetry = async () => {
@@ -230,18 +328,18 @@ export default function VoicePage() {
           </h1>
           <p className="text-[#94A3B8]">전화 한 통으로 모든 조달 업무를 처리합니다</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <Badge className="bg-[#A855F7]/20 text-[#A855F7]">
             <Sparkles className="w-3 h-3 mr-1" />
             Claude 4.0 연결됨
           </Badge>
-          <Badge className="bg-[#22C55E]/20 text-[#22C55E]">
-            <Clock className="w-3 h-3 mr-1" />
-            실시간 응답
+          <Badge className={isRecognitionSupported ? "bg-[#22C55E]/20 text-[#22C55E]" : "bg-[#EF4444]/20 text-[#EF4444]"}>
+            <Mic className="w-3 h-3 mr-1" />
+            {isRecognitionSupported ? "음성 인식 지원" : "음성 인식 미지원"}
           </Badge>
-          <Badge className="bg-[#3B82F6]/20 text-[#3B82F6]">
-            <Globe className="w-3 h-3 mr-1" />
-            30개국 다국어 지원
+          <Badge className={isSynthesisSupported ? "bg-[#22C55E]/20 text-[#22C55E]" : "bg-[#EF4444]/20 text-[#EF4444]"}>
+            <Volume2 className="w-3 h-3 mr-1" />
+            {isSynthesisSupported ? "음성 출력 지원" : "음성 출력 미지원"}
           </Badge>
         </div>
       </div>
@@ -354,20 +452,44 @@ export default function VoicePage() {
 
             {/* Input area */}
             <div className="p-4 border-t border-[#334155]">
+              {/* Listening indicator */}
+              {isListening && (
+                <div className="mb-3 p-2 rounded-lg bg-[#22C55E]/10 border border-[#22C55E]/30 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
+                  <span className="text-sm text-[#22C55E]">음성을 듣고 있습니다...</span>
+                </div>
+              )}
+
+              {/* Speaking indicator */}
+              {isSpeaking && (
+                <div className="mb-3 p-2 rounded-lg bg-[#3B82F6]/10 border border-[#3B82F6]/30 flex items-center gap-2">
+                  <Volume2 className="w-4 h-4 text-[#3B82F6] animate-pulse" />
+                  <span className="text-sm text-[#3B82F6]">AI가 말하고 있습니다...</span>
+                  <button
+                    onClick={cancelSpeech}
+                    className="ml-auto text-xs text-[#64748B] hover:text-white"
+                  >
+                    중단
+                  </button>
+                </div>
+              )}
+
               <div className="flex items-center gap-2 mb-3">
                 <input
                   type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="메시지를 입력하세요..."
-                  disabled={isTyping}
-                  className="flex-1 p-3 rounded-lg bg-[#334155] border border-[#475569] text-white placeholder-[#64748B] text-sm focus:outline-none focus:border-[#F59E0B] disabled:opacity-50"
+                  placeholder={isListening ? "말씀해 주세요..." : "메시지를 입력하세요..."}
+                  disabled={isTyping || isListening}
+                  className={`flex-1 p-3 rounded-lg bg-[#334155] border text-white placeholder-[#64748B] text-sm focus:outline-none disabled:opacity-50 ${
+                    isListening ? "border-[#22C55E]" : "border-[#475569] focus:border-[#F59E0B]"
+                  }`}
                 />
                 <Button
                   onClick={handleSend}
                   className="bg-[#F59E0B] hover:bg-[#D97706]"
-                  disabled={isTyping || !inputText.trim()}
+                  disabled={isTyping || !inputText.trim() || isListening}
                 >
                   {isTyping ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -379,19 +501,33 @@ export default function VoicePage() {
 
               {/* Call controls */}
               <div className="flex items-center justify-center gap-4">
+                {/* Auto-speak toggle */}
                 <Button
                   variant="outline"
                   size="icon"
-                  className="w-12 h-12 rounded-full border-[#334155] text-white hover:bg-[#1E293B]"
+                  onClick={toggleAutoSpeak}
+                  disabled={!isSynthesisSupported}
+                  className={`w-12 h-12 rounded-full border-[#334155] hover:bg-[#1E293B] ${
+                    autoSpeak ? "text-[#3B82F6] border-[#3B82F6]" : "text-[#64748B]"
+                  }`}
+                  title={autoSpeak ? "음성 출력 켜짐" : "음성 출력 꺼짐"}
                 >
-                  <Volume2 className="w-5 h-5" />
+                  {autoSpeak ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
                 </Button>
+
+                {/* Call button */}
                 <Button
                   size="icon"
                   className={`w-14 h-14 rounded-full ${
                     isCallActive ? 'bg-[#EF4444] hover:bg-[#DC2626]' : 'bg-[#22C55E] hover:bg-[#16A34A]'
                   }`}
-                  onClick={() => setIsCallActive(!isCallActive)}
+                  onClick={() => {
+                    if (isCallActive) {
+                      cancelSpeech();
+                      stopListening();
+                    }
+                    setIsCallActive(!isCallActive);
+                  }}
                 >
                   {isCallActive ? (
                     <PhoneOff className="w-6 h-6" />
@@ -399,14 +535,32 @@ export default function VoicePage() {
                     <Phone className="w-6 h-6" />
                   )}
                 </Button>
+
+                {/* Microphone button */}
                 <Button
                   variant="outline"
                   size="icon"
-                  className="w-12 h-12 rounded-full border-[#334155] text-white hover:bg-[#1E293B]"
+                  onClick={toggleMicrophone}
+                  disabled={!isRecognitionSupported || isTyping || !isCallActive}
+                  className={`w-12 h-12 rounded-full border-[#334155] hover:bg-[#1E293B] ${
+                    isListening ? "bg-[#22C55E] text-white border-[#22C55E]" : "text-white"
+                  }`}
+                  title={isListening ? "음성 인식 중단" : "음성 인식 시작"}
                 >
-                  <Mic className="w-5 h-5" />
+                  {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                 </Button>
               </div>
+
+              {/* Voice feature hints */}
+              {isCallActive && (
+                <div className="mt-3 text-center">
+                  <p className="text-xs text-[#64748B]">
+                    {isRecognitionSupported
+                      ? "마이크 버튼을 눌러 음성으로 입력하세요"
+                      : "이 브라우저에서는 음성 인식이 지원되지 않습니다"}
+                  </p>
+                </div>
+              )}
             </div>
           </Card>
         </div>
@@ -469,14 +623,33 @@ export default function VoicePage() {
 
           {/* Voice wave visualization */}
           <Card className="p-6 bg-[#1E293B]/60 border-[#334155]">
-            <h3 className="font-semibold text-white mb-4">음성 파형</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-white">음성 파형</h3>
+              <Badge className={
+                isListening
+                  ? "bg-[#22C55E]/20 text-[#22C55E]"
+                  : isSpeaking
+                    ? "bg-[#3B82F6]/20 text-[#3B82F6]"
+                    : "bg-[#64748B]/20 text-[#64748B]"
+              }>
+                {isListening ? "입력 중" : isSpeaking ? "출력 중" : "대기 중"}
+              </Badge>
+            </div>
             <div className="h-20 flex items-center justify-center gap-1">
               {Array.from({ length: 40 }).map((_, i) => (
                 <motion.div
                   key={i}
-                  className="w-1 rounded-full bg-[#F59E0B]"
+                  className={`w-1 rounded-full ${
+                    isListening
+                      ? "bg-[#22C55E]"
+                      : isSpeaking
+                        ? "bg-[#3B82F6]"
+                        : "bg-[#F59E0B]"
+                  }`}
                   animate={{
-                    height: isCallActive ? [8, Math.random() * 60 + 10, 8] : 8
+                    height: (isCallActive && (isListening || isSpeaking))
+                      ? [8, Math.random() * 60 + 10, 8]
+                      : 8
                   }}
                   transition={{
                     duration: 0.5,

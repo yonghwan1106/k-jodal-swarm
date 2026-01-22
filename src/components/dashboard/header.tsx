@@ -5,6 +5,7 @@ import { Bell, Search, User, Activity, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useMobileMenu } from "@/contexts/mobile-menu-context";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function Header() {
   const [currentTime, setCurrentTime] = useState<string>("");
@@ -35,7 +36,7 @@ export function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-[#0F172A]/95 backdrop-blur border-b border-[#1E293B] flex items-center justify-between px-4 lg:px-6">
+    <header className="sticky top-0 z-30 h-16 bg-background/95 backdrop-blur border-b border-border flex items-center justify-between px-4 lg:px-6">
       {/* Left side - Mobile menu button + Search */}
       <div className="flex items-center gap-3 lg:gap-4">
         {/* Mobile menu button */}
@@ -82,6 +83,9 @@ export function Header() {
         <div className="hidden lg:block text-sm text-[#64748B] font-mono" aria-live="polite" aria-atomic="true">
           {currentTime}
         </div>
+
+        {/* Theme Toggle */}
+        <ThemeToggle />
 
         {/* Notifications */}
         <Button

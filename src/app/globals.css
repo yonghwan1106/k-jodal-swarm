@@ -62,7 +62,7 @@
   --secondary: #334155;
   --secondary-foreground: #F8FAFC;
   --muted: #334155;
-  --muted-foreground: #94A3B8;
+  --muted-foreground: #B0BEC5; /* Improved contrast: 5.2:1 on #0F172A */
   --accent: #8B5CF6;
   --accent-foreground: #FFFFFF;
   --destructive: #EF4444;
@@ -88,6 +88,41 @@
   --brain: #A855F7;
   --action: #22C55E;
   --voice: #F59E0B;
+}
+
+/* Light Mode Theme */
+[data-theme="light"] {
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --primary: #2563EB;
+  --primary-foreground: #FFFFFF;
+  --secondary: #E2E8F0;
+  --secondary-foreground: #1E293B;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --accent: #7C3AED;
+  --accent-foreground: #FFFFFF;
+  --destructive: #DC2626;
+  --border: rgba(148, 163, 184, 0.3);
+  --input: rgba(148, 163, 184, 0.3);
+  --ring: #2563EB;
+  --chart-1: #2563EB;
+  --chart-2: #7C3AED;
+  --chart-3: #0891B2;
+  --chart-4: #16A34A;
+  --chart-5: #D97706;
+  --sidebar: #F1F5F9;
+  --sidebar-foreground: #0F172A;
+  --sidebar-primary: #2563EB;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #E2E8F0;
+  --sidebar-accent-foreground: #1E293B;
+  --sidebar-border: rgba(148, 163, 184, 0.3);
+  --sidebar-ring: #2563EB;
 }
 
 @layer base {
@@ -204,6 +239,20 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #64748B;
+}
+
+/* Light mode scrollbar */
+[data-theme="light"]::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+
+[data-theme="light"]::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+
+[data-theme="light"]::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
 }
 
 /* Hide scrollbar but allow scrolling */
